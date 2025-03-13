@@ -1,9 +1,12 @@
-// src/pages/Login.jsx
 import React, { useState, useEffect } from 'react';
+import { showToast } from '../utils/showToast';
+import { login } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -13,10 +16,19 @@ const Login = () => {
     };
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Email:', email);
-    console.log('Password:', password);
+    try {
+      const data = await login(email, password);
+
+      showToast('¡Inicio de sesión exitoso!', 'success');
+
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error al hacer login:', error);
+      
+      showToast(error.message || 'Hubo un problema con el inicio de sesión', 'error'); 
+    }
   };
 
   return (
@@ -65,7 +77,7 @@ const Login = () => {
 
       <div className="flex items-center justify-center bg-gray-200 h-full p-0 w-full">
         <img
-          src="./images/th.jpg"
+          src="./images/fondo_login.jpg"
           alt="Dinero"
           className="w-full h-full object-cover"
         />
