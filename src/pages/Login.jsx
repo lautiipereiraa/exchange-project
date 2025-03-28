@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // Nuevo estado para controlar la carga
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,7 +19,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true); // Activar el spinner
+    setIsLoading(true); 
     try {
       const data = await login(email, password);
 
@@ -29,7 +29,7 @@ const Login = () => {
       console.error('Error al hacer login:', error);
       showToast(error.message || 'Hubo un problema con el inicio de sesión', 'error');
     } finally {
-      setIsLoading(false); // Desactivar el spinner al finalizar
+      setIsLoading(false); 
     }
   };
 
@@ -70,10 +70,10 @@ const Login = () => {
             <button
               type="submit"
               className="w-full p-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={isLoading} // Deshabilitar el botón mientras carga
+              disabled={isLoading} 
             >
               {isLoading ? (
-                <div className="w-5 h-5 border-4 border-t-4 border-white rounded-full animate-spin mx-auto"></div> // Spinner
+                <div className="w-5 h-5 border-4 border-t-4 border-white rounded-full animate-spin mx-auto"></div>
               ) : (
                 'Iniciar sesión'
               )}

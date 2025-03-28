@@ -3,7 +3,7 @@ import { fetchClientes } from '../services/api';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const DashboardContent = () => {
+const ClientesContent = () => {
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -44,7 +44,7 @@ const DashboardContent = () => {
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Clientes</h2>
-      <ToastContainer /> {/* Agregado aquí */}
+      <ToastContainer /> 
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-300">
           <thead className="bg-gray-900 text-white">
@@ -71,4 +71,4 @@ const DashboardContent = () => {
   );
 };
 
-export default DashboardContent;
+export default ClientesContent;

@@ -3,7 +3,7 @@ import DashboardContent from "../components/DashboardContent";
 
 const Dashboard = () => {
   return (
-    <main className="flex-1 h-screen overflow-y-auto">
+    <main className="flex-1 h-screen">
       <DashboardContent />
     </main>
   );

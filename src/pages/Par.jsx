@@ -25,7 +25,6 @@ const ParDivisasPage = () => {
       } catch (err) {
         setError('Error al obtener los datos de la API.');
 
-        // Actualizar el toast en caso de error
         toast.update(loadingToast, {
           render: "Error al cargar los datos",
           type: "error",

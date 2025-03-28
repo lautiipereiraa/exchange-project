@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchCajas } from '../services/api';
+import { fetchPunto } from '../services/api';
 import { toast } from 'react-toastify';
 
 const CajasPage = () => {
@@ -12,7 +12,7 @@ const CajasPage = () => {
       const loadingToast = toast.loading("Cargando cajas...");
 
       try {
-        const response = await fetchCajas();
+        const response = await fetchPunto();
         setCajas(response);
 
         toast.update(loadingToast, {

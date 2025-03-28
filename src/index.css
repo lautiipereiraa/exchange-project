@@ -15,15 +15,34 @@ body {
 }
 
 body {
-    overflow: auto; 
+    overflow: auto;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
-  }
-  
-  .scrollbar-hide {
-    -ms-overflow-style: none; 
-    scrollbar-width: none;  
-  }
-  
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
