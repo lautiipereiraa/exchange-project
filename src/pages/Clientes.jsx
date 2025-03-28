@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { fetchClientes } from '../services/api';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import React, { useEffect, useState } from "react";
+import { useTable, usePagination } from "react-table";
+import { fetchClientes } from "../services/api";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ClientesContent = () => {
   const [clientes, setClientes] = useState([]);
@@ -39,33 +40,106 @@ const ClientesContent = () => {
     getClientes();
   }, []);
 
+  // Definir las columnas para react-table
+  const columns = React.useMemo(
+    () => [
+      { Header: "ID", accessor: "id" },
+      { Header: "Nombre", accessor: "name" },
+      { 
+        Header: "Fecha de Creación", 
+        accessor: "created_at",
+        Cell: ({ value }) => new Date(value).toLocaleDateString() 
+      }
+    ],
+    []
+  );
+
+  // Configuración de la tabla con paginación
+  const {
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    page,
+    prepareRow,
+    canPreviousPage,
+    canNextPage,
+    pageOptions,
+    nextPage,
+    previousPage,
+    state: { pageIndex }
+  } = useTable(
+    {
+      columns,
+      data: clientes,
+      initialState: { pageIndex: 0, pageSize: 15 } 
+    },
+    usePagination
+  );
+
   if (error) return <p className="text-center text-red-500">{error}</p>;
 
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Clientes</h2>
-      <ToastContainer /> 
+      <ToastContainer />
+      
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-300">
+        <table {...getTableProps()} className="min-w-full bg-white border border-gray-300">
           <thead className="bg-gray-900 text-white">
-            <tr>
-              <th className="px-4 py-2 border">ID</th>
-              <th className="px-4 py-2 border">Nombre</th>
-              <th className="px-4 py-2 border">Fecha de Creación</th>
-            </tr>
-          </thead>
-          <tbody>
-            {clientes.map((cliente) => (
-              <tr key={cliente.id} className="border-t">
-                <td className="px-4 py-2 border text-center">{cliente.id}</td>
-                <td className="px-4 py-2 border text-center">{cliente.name}</td>
-                <td className="px-4 py-2 border text-center">
-                  {new Date(cliente.created_at).toLocaleDateString()}
-                </td>
+            {headerGroups.map((headerGroup) => (
+              <tr {...headerGroup.getHeaderGroupProps()}>
+                {headerGroup.headers.map((column) => (
+                  <th {...column.getHeaderProps()} className="px-4 py-2 border">
+                    {column.render("Header")}
+                  </th>
+                ))}
               </tr>
             ))}
+          </thead>
+          <tbody {...getTableBodyProps()}>
+            {page.length > 0 ? (
+              page.map((row) => {
+                prepareRow(row);
+                return (
+                  <tr {...row.getRowProps()} className="border-t">
+                    {row.cells.map((cell) => (
+                      <td {...cell.getCellProps()} className="px-4 py-2 border text-center">
+                        {cell.render("Cell")}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="3" className="px-4 py-2 border text-gray-500 text-center">
+                  No hay clientes registrados.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
+      </div>
+
+      {/* Paginación */}
+      <div className="flex justify-center space-x-4 mt-4">
+        <button
+          onClick={previousPage}
+          disabled={!canPreviousPage}
+          className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
+        >
+          Anterior
+        </button>
+        <span className="px-4 py-2">
+          Página <strong>{pageIndex + 1}</strong> de {pageOptions.length}
+        </span>
+        <button
+          onClick={nextPage}
+          disabled={!canNextPage}
+          className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
+        >
+          Siguiente
+        </button>
       </div>
     </div>
   );

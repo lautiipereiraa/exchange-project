@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useTable, usePagination } from "react-table";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { fetchCajas } from "../services/api";
@@ -17,11 +18,11 @@ const CajasEstado = () => {
             try {
                 const data = await fetchCajas();
                 setCajasEstado(data);
-                setLoading(false);
             } catch (error) {
                 toast.error("Error al cargar el estado de las cajas: " + error.message, {
                     autoClose: 3000,
                 });
+            } finally {
                 setLoading(false);
             }
         };
@@ -52,73 +53,112 @@ const CajasEstado = () => {
             if (nuevasCajas[currentIndex].mount - parseFloat(montoInput) >= 0) {
                 nuevasCajas[currentIndex].mount -= parseFloat(montoInput);
             } else {
-                toast.error("No se puede reducir más la cantidad", {
-                    autoClose: 3000,
-                });
+                toast.error("No se puede reducir más la cantidad", { autoClose: 3000 });
                 closeModal();
                 return;
             }
         }
         setCajasEstado(nuevasCajas);
-        toast.success("Monto actualizado", {
-            autoClose: 3000,
-        });
+        toast.success("Monto actualizado", { autoClose: 3000 });
         closeModal();
     };
 
-    if (loading) {
-        return <div className="text-center p-6 text-gray-700">Cargando estado de cajas...</div>;
-    }
+    const columns = useMemo(
+        () => [
+            { Header: "Divisa", accessor: (row) => `${row.currency_id.name} (${row.currency_id.symbol})` },
+            { Header: "Cantidad", accessor: "mount" },
+            { Header: "Caja", accessor: "point_of_sell.name" },
+            {
+                Header: "Acciones",
+                accessor: "acciones",
+                Cell: ({ row }) => (
+                    <div className="flex justify-center items-center space-x-2">
+                        <button onClick={() => openModal(row.index, "aumentar")} className="text-green-500 hover:text-green-700">
+                            <FaPlus />
+                        </button>
+                        <button onClick={() => openModal(row.index, "disminuir")} className="text-red-500 hover:text-red-700">
+                            <FaMinus />
+                        </button>
+                    </div>
+                ),
+            },
+        ],
+        []
+    );
+
+    const {
+        getTableProps,
+        getTableBodyProps,
+        headerGroups,
+        page,
+        prepareRow,
+        canPreviousPage,
+        canNextPage,
+        pageOptions,
+        nextPage,
+        previousPage,
+        state: { pageIndex },
+    } = useTable(
+        {
+            columns,
+            data: cajasEstado,
+            initialState: { pageIndex: 0, pageSize: 15 },
+        },
+        usePagination
+    );
+
+    if (loading) return <div className="text-center p-6 text-gray-700">Cargando estado de cajas...</div>;
 
     return (
         <div className="container mx-auto p-4 rounded-lg">
             <h1 className="text-2xl font-bold mb-6">Estado de Cajas</h1>
             <ToastContainer />
 
-            <div className="mt-6">
-                <table className="min-w-full bg-white border border-gray-300 shadow-md rounded-lg text-center">
+            <div className="mt-6 overflow-x-auto">
+                <table {...getTableProps()} className="min-w-full bg-white border border-gray-300 shadow-md rounded-lg text-center">
                     <thead className="bg-gray-900 text-white">
-                        <tr>
-                            <th className="px-4 py-2 border">Divisa</th>
-                            <th className="px-4 py-2 border">Cantidad</th>
-                            <th className="px-4 py-2 border">Caja</th>
-                            <th className="px-4 py-2 border">Acciones</th>
-                        </tr>
+                        {headerGroups.map((headerGroup) => (
+                            <tr {...headerGroup.getHeaderGroupProps()}>
+                                {headerGroup.headers.map((column) => (
+                                    <th {...column.getHeaderProps()} className="px-4 py-2 border">
+                                        {column.render("Header")}
+                                    </th>
+                                ))}
+                            </tr>
+                        ))}
                     </thead>
-                    <tbody>
-                        {cajasEstado.length > 0 ? (
-                            cajasEstado.map((caja, index) => (
-                                <tr key={index} className="border-t">
-                                    <td className="px-4 py-2 border">
-                                        {caja.currency_id.name} ({caja.currency_id.symbol})
-                                    </td>
-                                    <td className="px-4 py-2 border">{caja.mount}</td>
-                                    <td className="px-4 py-2 border">{caja.point_of_sell.name}</td>
-                                    <td className="px-4 py-2 border flex justify-center items-center space-x-2">
-                                        <button
-                                            onClick={() => openModal(index, "aumentar")}
-                                            className="text-green-500 hover:text-green-700"
-                                        >
-                                            <FaPlus />
-                                        </button>
-                                        <button
-                                            onClick={() => openModal(index, "disminuir")}
-                                            className="text-red-500 hover:text-red-700"
-                                        >
-                                            <FaMinus />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
+                    <tbody {...getTableBodyProps()}>
+                        {page.length > 0 ? (
+                            page.map((row) => {
+                                prepareRow(row);
+                                return (
+                                    <tr {...row.getRowProps()} className="border-t">
+                                        {row.cells.map((cell) => (
+                                            <td {...cell.getCellProps()} className="px-4 py-2 border">
+                                                {cell.render("Cell")}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                );
+                            })
                         ) : (
                             <tr>
-                                <td colSpan="4" className="text-center py-4 text-gray-500">
-                                    No hay cajas registradas
-                                </td>
+                                <td colSpan="4" className="text-center py-4 text-gray-500">No hay cajas registradas</td>
                             </tr>
                         )}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Paginación */}
+            <div className="flex justify-center mt-4">
+                <button onClick={() => previousPage()} disabled={!canPreviousPage} className="px-4 py-2 mx-1 bg-gray-300 rounded-md">
+                    Anterior
+                </button>
+                <span className="px-4 py-2 mx-1">Página {pageIndex + 1} de {pageOptions.length}</span>
+                <button onClick={() => nextPage()} disabled={!canNextPage} className="px-4 py-2 mx-1 bg-gray-300 rounded-md">
+                    Siguiente
+                </button>
             </div>
 
             {showModal && (
@@ -138,16 +178,10 @@ const CajasEstado = () => {
                             />
                         </div>
                         <div className="flex justify-end space-x-4">
-                            <button
-                                onClick={closeModal}
-                                className="text-gray-600 hover:text-gray-800 px-4 py-2 rounded-md"
-                            >
+                            <button onClick={closeModal} className="text-gray-600 hover:text-gray-800 px-4 py-2 rounded-md">
                                 Cancelar
                             </button>
-                            <button
-                                onClick={saveMonto}
-                                className="bg-gray-900 text-white px-4 py-2 rounded-md"
-                            >
+                            <button onClick={saveMonto} className="bg-gray-900 text-white px-4 py-2 rounded-md">
                                 Guardar
                             </button>
                         </div>
